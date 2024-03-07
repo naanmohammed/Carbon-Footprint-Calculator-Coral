@@ -1,80 +1,78 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Web.UI.WebControls;
+using System.Linq;
 
 public partial class DataHistory : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
         if (!IsPostBack)
-        {
-            List<TransportEmission> transportData = GetDummyTransportData();
-            gvTransportEmissions.DataSource = transportData;
-            gvTransportEmissions.DataBind();
+        {           
+            LoadTransportEntries();
 
-            List<ElectricityConsumption> electricityData = GetDummyElectricityData();
-            gvElectricityConsumption.DataSource = electricityData;
+            LoadElectricityEntries();
+
+            CalculateAndDisplayTotalCO2Emissions();
+        }
+    }
+
+    private void LoadTransportEntries()
+    {
+        if (Session["TransportEntries"] != null)
+        {
+            List<DataEntryModel> transportEntries = (List<DataEntryModel>)Session["TransportEntries"];
+
+            foreach (var entry in transportEntries)
+            {
+                entry.CalculateTransportCO2Emissions();
+            }
+
+            gvTransportEmissions.DataSource = transportEntries.Select(entry => new
+            {
+                VehicleType = entry.VehicleType,
+                Distance = entry.DistanceType.Equals("Miles") ? entry.ConvertedDistance : entry.Distance.ToString(),
+                FuelType = entry.FuelType,
+                FuelEfficiency = entry.FuelEfficiencyUnit.Equals("MPG") ? entry.ConvertedFuelEfficiency : entry.FuelEfficiency.ToString(),
+                CO2Emissions = entry.CO2Emissions,
+                EntryDate = entry.EntryDate
+            });
+            gvTransportEmissions.DataBind();
+        }
+    }
+
+
+    private void LoadElectricityEntries()
+    {
+        if (Session["ElectricityEntries"] != null)
+        {
+            List<DataEntryModel> electricityEntries = (List<DataEntryModel>)Session["ElectricityEntries"];
+
+            foreach (var entry in electricityEntries)
+            {
+                entry.CalculateElectricityCO2Emissions();
+            }
+
+            gvElectricityConsumption.DataSource = electricityEntries;
             gvElectricityConsumption.DataBind();
         }
     }
 
-    private List<TransportEmission> GetDummyTransportData()
+    private void CalculateAndDisplayTotalCO2Emissions()
     {
-        List<TransportEmission> data = new List<TransportEmission>();
-        data.Add(new TransportEmission("Car", 100, "Gasoline", 30, DateTime.Now.AddDays(-5)));
-        data.Add(new TransportEmission("Truck", 200, "Diesel", 20, DateTime.Now.AddDays(-3)));
-        data.Add(new TransportEmission("Bus", 150, "Diesel", 15, DateTime.Now.AddDays(-2)));
-        data.Add(new TransportEmission("Motorcycle", 50, "Gasoline", 40, DateTime.Now.AddDays(-1)));
-        data.Add(new TransportEmission("Bicycle", 0, "None", 0, DateTime.Now.AddDays(-6)));
-        data.Add(new TransportEmission("Bajaj", 80, "Gasoline", 35, DateTime.Now.AddDays(-4)));
-        data.Add(new TransportEmission("Train", 300, "Electric", 10, DateTime.Now.AddDays(-7)));
-        data.Add(new TransportEmission("Electric Car", 120, "Electric", 5, DateTime.Now.AddDays(-9)));
-        return data;
-    }
+        double totalCO2Emissions = 0;
 
-    private List<ElectricityConsumption> GetDummyElectricityData()
-    {
-        List<ElectricityConsumption> data = new List<ElectricityConsumption>();
-        data.Add(new ElectricityConsumption("Grid", 500, DateTime.Now.AddDays(-5)));
-        data.Add(new ElectricityConsumption("Solar", 200, DateTime.Now.AddDays(-3)));
-        data.Add(new ElectricityConsumption("Wind", 300, DateTime.Now.AddDays(-2)));
-        data.Add(new ElectricityConsumption("Hydro", 250, DateTime.Now.AddDays(-1)));
-        data.Add(new ElectricityConsumption("Waste", 150, DateTime.Now.AddDays(-4)));
-        data.Add(new ElectricityConsumption("Geothermal", 350, DateTime.Now.AddDays(-7)));
-        data.Add(new ElectricityConsumption("Coal", 600, DateTime.Now.AddDays(-9)));
-        data.Add(new ElectricityConsumption("Natural Gas", 450, DateTime.Now.AddDays(-10)));
-        return data;
-    }
-}
+        if (Session["TransportEntries"] != null)
+        {
+            List<DataEntryModel> transportEntries = (List<DataEntryModel>)Session["TransportEntries"];
+            totalCO2Emissions += transportEntries.Sum(entry => entry.CO2Emissions);
+        }
 
-public class TransportEmission
-{
-    public string VehicleType { get; set; }
-    public int Distance { get; set; }
-    public string FuelType { get; set; }
-    public int FuelEfficiency { get; set; }
-    public DateTime EntryDate { get; set; }
+        if (Session["ElectricityEntries"] != null)
+        {
+            List<DataEntryModel> electricityEntries = (List<DataEntryModel>)Session["ElectricityEntries"];
+            totalCO2Emissions += electricityEntries.Sum(entry => entry.CO2Emissions);
+        }
 
-    public TransportEmission(string vehicleType, int distance, string fuelType, int fuelEfficiency, DateTime entryDate)
-    {
-        VehicleType = vehicleType;
-        Distance = distance;
-        FuelType = fuelType;
-        FuelEfficiency = fuelEfficiency;
-        EntryDate = entryDate;
-    }
-}
-
-public class ElectricityConsumption
-{
-    public string EnergySource { get; set; }
-    public int ElectricityUsage { get; set; }
-    public DateTime EntryDate { get; set; }
-
-    public ElectricityConsumption(string energySource, int electricityUsage, DateTime entryDate)
-    {
-        EnergySource = energySource;
-        ElectricityUsage = electricityUsage;
-        EntryDate = entryDate;
+        lblTotalCO2Emissions.Text = totalCO2Emissions.ToString("N2"); 
     }
 }
