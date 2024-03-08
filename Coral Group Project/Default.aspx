@@ -3,11 +3,11 @@
 <asp:Content ID="BodyContent" ContentPlaceHolderID="MainContent" runat="server"  >
 
        <main class="w-100">
-        <section class=" mb-5 hero-section container-fluid" style="background-image: url('https://source.unsplash.com/1600x900/?nature,environment'); background-size: cover; background-position: center; height: 100vh; padding: 150px 0px; color: #fff; text-align: center;">
+        <section class=" mb-5 hero-section container-fluid" style="background-image: url('https://source.unsplash.com/1600x900/?nature,environment'); background-size: cover; background-position: center; height: 75vh; padding: 150px 0px; color: #fff; text-align: center;">
             <div>
                 <h1 class="display-4 fw-bold mb-4">Carbon Footprint Tracker Application</h1>
                 <p class="lead mb-4">Embrace a sustainable future with our user-friendly and efficient tool.</p>
-                <a href="~/DataEntry" class="btn btn-primary btn-lg">Get Started</a>
+                <a href="/DataEntry" class="btn btn-primary btn-lg">Get Started</a>
             </div>
         </section>
 
